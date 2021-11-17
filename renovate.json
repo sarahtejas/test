@@ -1,0 +1,3 @@
+{
+  "extends": ["github>circleci/renovate-config-web-ui"]
+}

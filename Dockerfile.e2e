@@ -1,0 +1,10 @@
+FROM cypress/included:3.8.3
+ENTRYPOINT []
+
+WORKDIR /tmp
+
+RUN yarn global add wait-on
+COPY cypress.json .
+COPY cypress ./cypress
+
+CMD wait-on --verbose --interval 1000 http://localhost:3000/healthcheck && cypress run

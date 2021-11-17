@@ -1,0 +1,53 @@
+deployment:
+  replicas: 3
+  containers:
+    web-ui-docker-container-name: # TODO: REPLACE
+      image: '<<image_name>>'
+      env:
+        STATSD_HOST: 'metrics.kube-system.svc.cluster.local'
+        STATSD_PORT: '8125'
+        GRAYLOG_HOST: 'graylog.infra.circleci.com'
+        GRAYLOG_PORT: 12202
+        EXCEPTION_LOGGER_CLIENT_TOKEN: #TODO: ADD ROLLBAR CLIENT TOKEN
+        ANALYTICS_WRITE_KEY: AbgkrgN4cbRhAVEwlzMkHbwvrXnxHh35
+        ASSET_PREFIX: #TODO: ADD Cloudfront CDN URL
+      envCustom:
+        - name: K8S_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: K8S_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: EXCEPTION_LOGGER_SERVER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: #TODO: REPLACE WITH helm service name ex: web-ui-onboarding-v1, web-ui-v1
+              key: exception-logger-server-token
+      healthCheck:
+        type: httpGet
+        path: /healthcheck
+        scheme: HTTP
+        port: http
+        initialDelaySeconds: 20
+      ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+      resources:
+        requests:
+          memory: '512Mi'
+        limits:
+          memory: '512Mi'
+service:
+  - name: http
+    port: 80
+    targetPort: 80
+traefik:
+  annotations:
+    commonSecureHeaders: enable
+  rules:
+    - host: 'app.circleci.com' # or different subdomain
+      paths:
+        - path: /my-web-ui-page-prefix #TODO: replace with MFE path
